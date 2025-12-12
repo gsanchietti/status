@@ -15,7 +15,7 @@ http:
           # This will be automatically generated from .env variables:
           # WEBHOOK_USERNAME and WEBHOOK_PASSWORD
           # The deploy.sh script will hash the password and update this line
-          - "user@example.com:$REPLACE_WITH_HASH$"
+          - "WEBHOOK_CREDENTIALS_PLACEHOLDER"
     
     # BasicAuth for Traefik Dashboard (optional)
     dashboard-auth:
