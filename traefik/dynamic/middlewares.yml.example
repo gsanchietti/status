@@ -22,7 +22,7 @@ http:
       basicAuth:
         users:
           # Generate with: htpasswd -nb admin yourpassword
-          - "admin:$apr1$REPLACE_WITH_HASH$"
+          - "TRAEFIK_DASHBOARD_CREDENTIALS_PLACEHOLDER"
     
     # HTTPS redirect middleware
     redirect-to-https:

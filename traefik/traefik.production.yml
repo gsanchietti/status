@@ -26,19 +26,10 @@ entryPoints:
 certificatesResolvers:
   letsencrypt:
     acme:
-      email: matteo.dilorenzi@nethesis.it
       storage: /letsencrypt/acme.json
       # HTTP Challenge (port 80 must be publicly accessible)
       httpChallenge:
         entryPoint: web
-      # Alternative: TLS Challenge
-      # tlsChallenge: {}
-      # Alternative: DNS Challenge (for wildcard certs)
-      # dnsChallenge:
-      #   provider: cloudflare
-      #   resolvers:
-      #     - "1.1.1.1:53"
-      #     - "8.8.8.8:53"
 
 # Providers
 providers:
@@ -69,10 +60,3 @@ accessLog:
 # Ping for health checks
 ping:
   entryPoint: web
-
-# Metrics (optional - Prometheus)
-# metrics:
-#   prometheus:
-#     entryPoint: web
-#     addEntryPointsLabels: true
-#     addServicesLabels: true

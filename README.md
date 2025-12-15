@@ -31,6 +31,46 @@ nano .env
 - `APP_KEY` - Generated during deployment
 - `CACHET_API_TOKEN` - Generated during setup
 
+#### Podman/Docker Socket Configuration
+
+To allow Traefik to communicate with the container engine (Podman or Docker), you must configure the socket path in your `.env` file. This is required for service discovery and dynamic routing.
+
+**Required Variables:**
+
+- `PODMAN_SOCKET`: The path to the Podman or Docker socket on the host. This is mounted into the Traefik container.
+- `USER_ID` (optional): Your Linux user ID, used only to help compose the rootless Podman socket path.
+
+**Why is this necessary?**
+
+Traefik needs access to the container engine's socket to detect running services and route traffic. The socket path differs depending on whether you use Podman in rootless mode, Podman as root, or Docker:
+
+- **Podman rootless**: The socket is per-user and located at `/run/user/<USER_ID>/podman/podman.sock`.
+- **Podman root**: The socket is at `/run/podman/podman.sock`.
+
+**How to configure:**
+
+Edit your `.env` file and set the variables as follows:
+
+**Podman rootless (recommended for development):**
+
+```env
+USER_ID=1000  # Replace with your UID (run `id -u` to get it)
+PODMAN_SOCKET=/run/user/1000/podman/podman.sock
+```
+
+**Podman root:**
+
+```env
+PODMAN_SOCKET=/run/podman/podman.sock
+```
+
+> **Note:**
+> - If you use Podman rootless, set both USER_ID and PODMAN_SOCKET as above.
+> - For root, leave USER_ID empty or unset and set only PODMAN_SOCKET.
+> - The value of PODMAN_SOCKET is used in `docker-compose.yml` to mount the correct socket into the Traefik container.
+
+If you do not set PODMAN_SOCKET, the deployment will fail to start Traefik correctly.
+
 ### 2. Configure Prometheus Targets
 
 Copy the example configuration and edit with your infrastructure details:
@@ -124,12 +164,43 @@ nano traefik/dynamic/middlewares.yml
 
 **Note**: The `webhook-auth` section will be automatically configured by `deploy.sh` from your `.env` credentials.
 
-### 5. Deploy Infrastructure
+### 5. Local Development Configuration
+
+**⚠️ Important for Local Deployment:**
+
+For local development (without HTTPS), you need to disable the HTTPS redirect in `docker-compose.yml`. Comment out the redirect middleware on the HTTP routers:
+
+**For Cachet service**:
+```yaml
+# - "traefik.http.routers.cachet-http.middlewares=redirect-to-https@file"
+```
+
+**For Middleware service**:
+```yaml
+# - "traefik.http.routers.webhook-http.middlewares=redirect-to-https@file"
+```
+
+Also ensure your `.env` is configured for local environment:
+```bash
+ENVIRONMENT=local
+PODMAN_SOCKET=/run/user/1000/podman/podman.sock
+CACHET_DOMAIN=localhost
+WEBHOOK_DOMAIN=localhost
+TRAEFIK_DOMAIN=localhost
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8080
+ASSET_URL=http://localhost:8080
+CERT_RESOLVER=
+```
+
+**For Production deployment**, make sure these redirect middlewares are **uncommented** to enforce HTTPS.
+
+### 6. Deploy Infrastructure
 
 Run the deployment script:
 
 ```bash
-chmod +x deploy.sh setup-cachet.sh
 ./deploy.sh
 ```
 
@@ -143,7 +214,7 @@ This script will:
 
 **Note**: The middleware service will NOT start yet (requires API token first).
 
-### 6. Complete Setup
+### 7. Complete Setup
 
 Run the interactive setup script:
 

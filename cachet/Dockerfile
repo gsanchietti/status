@@ -1,5 +1,5 @@
 # Multi-stage build for production Cachet deployment
-ARG PHP_VERSION=8.3
+ARG PHP_VERSION
 
 # ============================================
 # Stage 1: Composer dependencies
