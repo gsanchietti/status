@@ -7,6 +7,24 @@ echo "=========================================="
 echo "Cachet Infrastructure Deployment"
 echo "=========================================="
 
+# Prepare Cachet repository
+echo ""
+
+echo "Preparing Cachet repository..."
+# Remove existing local cachet folder if present
+if [ -d "cachet" ]; then
+    echo "Removing existing cachet/ folder..."
+    rm -rf cachet
+fi
+
+# Clone Cachet repository
+echo "Cloning cachet repository..."
+git clone git@github.com:cachethq/cachet.git cachet || { echo "Error cloning cachet"; exit 1; }
+
+# Copy Dockerfile and docker folder into the new cachet folder
+cp cachet-configuration-files/Dockerfile cachet/Dockerfile
+cp -r cachet-configuration-files/docker cachet/
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'

@@ -2,6 +2,8 @@
 
 This project provides an automated deployment infrastructure for [CachetHQ](https://cachethq.io/) status page system using Podman containers, with integrated Prometheus AlertManager webhook middleware for automatic incident management.
 
+All application sources and dependencies are prepared automatically by the deployment script; you do not need to manually clone or manage any application repositories except this one.
+
 ## What This Does
 
 This infrastructure deploys a complete status page system consisting of:
@@ -186,11 +188,12 @@ Run the deployment script:
 
 This script will:
 1. Validate configuration
-2. Generate Laravel `APP_KEY` automatically
-3. Configure webhook authentication
-4. Build container images
-5. Start Traefik, PostgreSQL, and Cachet services
-6. Run database migrations
+2. Prepare all application sources and dependencies automatically (no manual cloning required)
+3. Generate Laravel `APP_KEY` automatically
+4. Configure webhook authentication
+5. Build container images
+6. Start Traefik, PostgreSQL, and Cachet services
+7. Run database migrations
 
 **Note**: The middleware service will NOT start yet (requires API token first).
 

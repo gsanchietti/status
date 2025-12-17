@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6eaaeef8fc4b70ddf17151ea0d73f05d",
+    "content-hash": "2650ffcca77a1959bbf9ec7d9d795c52",
     "packages": [
         {
             "name": "amphp/amp",
@@ -1093,10 +1093,16 @@
         {
             "name": "cachethq/core",
             "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/cachethq/core.git",
+                "reference": "7e3aa929266075e25ea3985aca164e7df8843539"
+            },
             "dist": {
-                "type": "path",
-                "url": "../core",
-                "reference": "40da1478f2aeafcb363a035ef7829a186546989b"
+                "type": "zip",
+                "url": "https://api.github.com/repos/cachethq/core/zipball/7e3aa929266075e25ea3985aca164e7df8843539",
+                "reference": "7e3aa929266075e25ea3985aca164e7df8843539",
+                "shasum": ""
             },
             "require": {
                 "doctrine/dbal": "^3.6",
@@ -1123,15 +1129,15 @@
             "require-dev": {
                 "dedoc/scramble": "^0.12",
                 "larastan/larastan": "^3.4",
-                "laravel/boost": "^1.0",
                 "laravel/pail": "^1.1",
                 "laravel/pint": "^1.24",
-                "orchestra/testbench": "^9.15.1",
-                "pestphp/pest": "^3.8",
+                "orchestra/testbench": "^9.5.1",
+                "pestphp/pest": "^3.2",
                 "pestphp/pest-plugin-laravel": "^3.0",
                 "pestphp/pest-plugin-livewire": "*",
                 "pestphp/pest-plugin-type-coverage": "^3.3"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -1216,10 +1222,7 @@
                 "issues": "https://github.com/cachethq/core/issues",
                 "source": "https://github.com/cachethq/core"
             },
-            "transport-options": {
-                "symlink": true,
-                "relative": true
-            }
+            "time": "2025-08-18T15:37:01+00:00"
         },
         {
             "name": "carbonphp/carbon-doctrine-types",

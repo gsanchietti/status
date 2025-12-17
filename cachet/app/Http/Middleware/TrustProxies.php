@@ -19,32 +19,14 @@ use Symfony\Component\HttpFoundation\Response;
 class TrustProxies extends LaravelTrustProxies
 {
     /**
-     * The headers that should be used to detect proxies.
-     *
-     * This property was missing in the original Cachet implementation,
-     * causing Laravel to not detect HTTPS correctly when behind a reverse proxy.
-     * See: https://laravel.com/docs/11.x/requests#configuring-trusted-proxies
-     *
-     * @var int
-     */
-    protected $headers =
-        Request::HEADER_X_FORWARDED_FOR |
-        Request::HEADER_X_FORWARDED_HOST |
-        Request::HEADER_X_FORWARDED_PORT |
-        Request::HEADER_X_FORWARDED_PROTO;
-
-    /**
      * Handle an incoming request.
      *
      * @param \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response) $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Set proxies from configuration before handling the request
-        $trustedProxies = config('cachet.trusted_proxies');
-        if ($trustedProxies) {
-            // If it's '*', trust all proxies, otherwise split by comma
-            $this->proxies = ($trustedProxies === '*') ? '*' : explode(',', $trustedProxies);
+        if (config('cachet.trusted_proxies')) {
+            LaravelTrustProxies::at(explode(',', config('cachet.trusted_proxies')));
         }
 
         return parent::handle($request, $next);

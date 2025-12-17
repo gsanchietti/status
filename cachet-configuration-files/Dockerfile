@@ -43,6 +43,9 @@ RUN composer install \
     --ignore-platform-req=ext-dom \
     --ignore-platform-req=ext-xml
 
+# Update cachethq/core dependency
+RUN composer update cachethq/core --no-interaction --no-dev --prefer-dist
+
 # ============================================
 # Stage 3: Production PHP runtime
 # ============================================
