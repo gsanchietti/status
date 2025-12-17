@@ -70,3 +70,6 @@ volumes/
 # Test files
 phpunit.xml
 .phpunit.result.cache
+
+# Cachet repository cloned locally
+cachet/
