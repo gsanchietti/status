@@ -95,11 +95,18 @@ CONFIG_FILE = os.path.join(SCRIPT_DIR, "config.json")
 # Load configuration files
 CONFIG = load_config(CONFIG_FILE)
 
+def _extract_status_value(status):
+    if isinstance(status, dict):
+        return status.get("value", 1)
+    return status
+
 def print_component_status_change(name, old_status, new_status):
     status_map = {1: "Operational", 3: "Partial Outage", 4: "Outage"}
-    old_status_str = status_map.get(old_status, str(old_status))
-    new_status_str = status_map.get(new_status, str(new_status))
-    print(f"[COMPONENT_STATUS_CHANGE] component=\"{name}\" old_status ={old_status} ({old_status_str}) new_status = {new_status} ({new_status_str})")
+    old_status_val = _extract_status_value(old_status)
+    new_status_val = _extract_status_value(new_status)
+    old_status_str = status_map.get(old_status_val, str(old_status_val))
+    new_status_str = status_map.get(new_status_val, str(new_status_val))
+    print(f"[COMPONENT_STATUS_CHANGE] component=\"{name}\" old_status={old_status_val} ({old_status_str}) new_status={new_status_val} ({new_status_str})")
 
 def get_component_name(component_id):
     """Get the component name from CachetHQ API."""
