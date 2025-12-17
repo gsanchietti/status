@@ -252,6 +252,40 @@ Critical targets (marked with `status_page_critical_target: true`) have priority
 
 ---
 
+## Logging and Monitoring
+
+To monitor received webhook requests and component status changes from the middleware container, you can use the following commands:
+
+### Webhook Request Logs
+
+To view all requests received on the `/webhook` endpoint:
+
+```
+podman logs <container-name> | grep "WEBHOOK_REQUEST"
+```
+
+Example output:
+
+```
+[WEBHOOK_REQUEST] source_ip=10.0.0.5 headers=[Host: example.com; User-Agent: curl/7.68.0; Content-Type: application/json] body={...}
+```
+
+### Component Status Change Logs
+
+To view all component status changes (both visible and invisible):
+
+```
+podman logs <container-name> | grep "COMPONENT_STATUS_CHANGE"
+```
+
+Example output:
+
+```
+[COMPONENT_STATUS_CHANGE] component="Database" old_status=1 (Operational) new_status=4 (Outage)
+```
+
+Replace `<container-name>` with the actual container name (e.g., `cachet-middleware`).
+
 ## Additional Documentation
 
 - `middleware/README.md` - Detailed middleware architecture and API

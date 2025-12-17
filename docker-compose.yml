@@ -124,9 +124,7 @@ services:
     volumes:
       # Mount config files as read-only
       - ./middleware/config.json:/app/config.json:ro
-      - ./middleware/prometheus-new.yml:/app/prometheus-new.yml:ro
-      # Optional: mount log directory for persistence
-      - ./middleware/logs:/app/logs:rw
+      - ./middleware/prometheus.yml:/app/prometheus.yml:ro
     labels:
       - "traefik.enable=true"
       # HTTP router - redirect to HTTPS

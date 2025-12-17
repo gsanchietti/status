@@ -53,16 +53,7 @@ console_handler.setLevel(logging.INFO)
 console_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 console_handler.setFormatter(console_formatter)
 
-# File logger - only request details
-file_handler = logging.FileHandler('log.txt', mode='a')
-file_handler.setLevel(logging.INFO)
-file_formatter = logging.Formatter('%(asctime)s - %(message)s')
-file_handler.setFormatter(file_formatter)
 
-# Create a custom logger for file logging
-file_logger = logging.getLogger('webhook_requests')
-file_logger.setLevel(logging.INFO)
-file_logger.addHandler(file_handler)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -103,6 +94,12 @@ CONFIG_FILE = os.path.join(SCRIPT_DIR, "config.json")
 
 # Load configuration files
 CONFIG = load_config(CONFIG_FILE)
+
+def print_component_status_change(name, old_status, new_status):
+    status_map = {1: "Operational", 3: "Partial Outage", 4: "Outage"}
+    old_status_str = status_map.get(old_status, str(old_status))
+    new_status_str = status_map.get(new_status, str(new_status))
+    print(f"[COMPONENT_STATUS_CHANGE] component=\"{name}\" old_status ={old_status} ({old_status_str}) new_status = {new_status} ({new_status_str})")
 
 def get_component_name(component_id):
     """Get the component name from CachetHQ API."""
@@ -169,14 +166,16 @@ def create_incident_update(incident_id, message):
     response.raise_for_status()
     logger.info(f"Update created for incident ID: {incident_id}")
 
-def update_component_status(component_id, status):
-    logger.info(f"Updating component status for component ID: {component_id} to status: {status}")
+def update_component_status(component_id, name, old_status, new_status):
+    if old_status != new_status:
+        print_component_status_change(name, old_status, new_status)
+    logger.info(f"Updating component status for component '{name}' (ID: {component_id}) to status: {new_status}")
     url = f"{CACHET_API_URL}/components/{component_id}"
     headers = {"Authorization": f"Bearer {CACHET_API_TOKEN}"}
-    payload = {"status": status}
+    payload = {"status": new_status}
     response = requests.patch(url, json=payload, headers=headers)
     response.raise_for_status()
-    logger.info(f"Component status updated for component ID: {component_id}")
+    logger.info(f"Component status updated for component '{name}' (ID: {component_id})")
 
 def get_component_id_by_name(component_name):
     """Get component ID by name from CachetHQ API with pagination support."""
@@ -360,22 +359,23 @@ def remove_alert_from_description(description, alertname):
     # Reconstruct description with critical flag on first line
     return f"{critical_line}\n{new_alerts_line}"
 
-def update_invisible_component(component_id, status, description):
-    """Update invisible component status and description."""
-    logger.info(f"Updating invisible component {component_id}: status={status}, description={description}")
+def update_invisible_component(component_id, name, old_status, new_status, description):
+    if old_status != new_status:
+        print_component_status_change(name, old_status, new_status)
+    logger.info(f"Updating invisible component '{name}' (ID: {component_id}): status={new_status}, description={description}")
     url = f"{CACHET_API_URL}/components/{component_id}"
     headers = {"Authorization": f"Bearer {CACHET_API_TOKEN}"}
     payload = {
-        "status": status,
+        "status": new_status,
         "enabled": False,
         "description": description
     }
     try:
         response = requests.put(url, json=payload, headers=headers)
         response.raise_for_status()
-        logger.info(f"Invisible component {component_id} updated successfully")
+        logger.info(f"Invisible component '{name}' (ID: {component_id}) updated successfully")
     except Exception as e:
-        logger.error(f"Failed to update invisible component {component_id}: {e}")
+        logger.error(f"Failed to update invisible component '{name}' (ID: {component_id}): {e}")
 
 def extract_critical_from_description(description):
     """
@@ -457,32 +457,21 @@ def get_open_incident(component_id):
     return None
 
 def log_request_details(req):
-    """Log complete request details including headers, source IP, and body."""
-    file_logger = logging.getLogger('webhook_requests')
-    
-    file_logger.info("="*80)
-    file_logger.info("WEBHOOK REQUEST DETAILS")
-    file_logger.info("="*80)
-    
-    # Source IP
+    """Log request details in a single line on stdout with a fixed label for easy grep."""
     source_ip = req.remote_addr
-    file_logger.info(f"Source IP: {source_ip}")
-    
-    # Headers
-    file_logger.info("Request Headers:")
-    for header_name, header_value in req.headers:
-        file_logger.info(f"  {header_name}: {header_value}")
-    
-    # Request body
-    file_logger.info("Request Body (JSON):")
     try:
         body_json = req.get_json()
-        file_logger.info("  " + json.dumps(body_json))
+        body_str = json.dumps(body_json, separators=(",", ":"), ensure_ascii=False)
     except Exception as e:
-        file_logger.error(f"Failed to parse request body as JSON: {e}")
-        file_logger.info(f"Raw body: {req.data.decode('utf-8', errors='ignore')}")
-    
-    file_logger.info("="*80)
+        body_str = f"Failed to parse JSON: {e}; Raw: {req.data.decode('utf-8', errors='ignore')}"
+    headers_str = "; ".join([f"{k}: {v}" for k, v in req.headers])
+    # Compose single line log
+    log_line = (
+        f"[WEBHOOK_REQUEST] source_ip={source_ip} "
+        f"headers=[{headers_str}] "
+        f"body={body_str}"
+    )
+    print(log_line)
 
 @app.route("/health", methods=["GET"])
 def health():
@@ -537,15 +526,17 @@ def webhook():
         logger.info(f"Component '{invisible_component_name}' critical flag: {'YES' if is_current_component_critical else 'NO'}")
         
         # Update invisible component based on alert status
+        old_invisible_status = invisible_component.get("status", 1)
+        invisible_name = invisible_component.get("name", f"ID:{invisible_component_id}")
         if status == "firing":
             new_description = add_alert_to_description(current_description, alertname)
-            update_invisible_component(invisible_component_id, 4, new_description)
+            update_invisible_component(invisible_component_id, invisible_name, old_invisible_status, 4, new_description)
         elif status == "resolved":
             new_description = remove_alert_from_description(current_description, alertname)
             # Check if there are still alerts (second line after \n)
             alerts_line = new_description.split('\n', 1)[1] if '\n' in new_description else "no alerts"
             new_status = 1 if alerts_line == "no alerts" else 4
-            update_invisible_component(invisible_component_id, new_status, new_description)
+            update_invisible_component(invisible_component_id, invisible_name, old_invisible_status, new_status, new_description)
         
         # Parse multiple visible components from status_page_component label
         visible_component_names = [name.strip() for name in status_page_component.split(',')]
@@ -589,11 +580,11 @@ def webhook():
             )
             current_visible_component = get_component_by_id(visible_component_id)
             old_visible_status = current_visible_component.get("status") if current_visible_component else 1
-            
-            logger.info(f"Visible component '{visible_component_name}' status change: {old_visible_status} -> {new_visible_status}")
-            
+            visible_name = current_visible_component.get("name", visible_component_name) if current_visible_component else visible_component_name
+            logger.info(f"Visible component '{visible_name}' status change: {old_visible_status} -> {new_visible_status}")
+
             # Update visible component status
-            update_component_status(visible_component_id, new_visible_status)
+            update_component_status(visible_component_id, visible_name, old_visible_status, new_visible_status)
             
             # Incident management based on component status transitions
             if status == "firing" and new_visible_status == 4 and old_visible_status != 4:
