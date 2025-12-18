@@ -21,6 +21,7 @@ RUN apk add --no-cache \
     autoconf \
     g++ \
     make \
+    git \
     && docker-php-ext-install \
         intl \
         dom \
