@@ -15,8 +15,14 @@ RUN apk add --no-cache \
         intl \
         dom \
         xml \
+        simplexml \
+        tokenizer \
+        session \
     && php -m | grep -i intl \
-    && php -m | grep -i dom
+    && php -m | grep -i dom \
+    && php -m | grep -i simplexml \
+    && php -m | grep -i tokenizer \
+    && php -m | grep -i session
 
 WORKDIR /app
 
@@ -75,6 +81,9 @@ RUN apk add --no-cache \
         intl \
         dom \
         xml \
+        simplexml \
+        tokenizer \
+        session \
     && rm -rf /var/cache/apk/*
 
 # Install PHP extensions for production
