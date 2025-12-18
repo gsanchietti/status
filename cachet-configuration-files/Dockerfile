@@ -18,7 +18,6 @@ RUN apk add --no-cache \
     composer \
     icu-dev \
     libxml2-dev \
-    php-dev \
     autoconf \
     g++ \
     make \
