@@ -6,6 +6,20 @@ ARG PHP_VERSION
 # ============================================
 FROM docker.io/library/php:${PHP_VERSION}-cli-alpine AS composer
 
+# Allow use of user's SSH key for private repository authentication
+ARG SSH_PRIVATE_KEY
+ARG SSH_PUBLIC_KEY
+ARG SSH_KNOWN_HOSTS
+
+# Temporarily copy SSH keys and configuration
+RUN mkdir -p /root/.ssh
+COPY --chown=root:root id_rsa /root/.ssh/id_rsa
+COPY --chown=root:root id_rsa.pub /root/.ssh/id_rsa.pub
+COPY --chown=root:root known_hosts /root/.ssh/known_hosts
+RUN chmod 600 /root/.ssh/id_rsa && chmod 644 /root/.ssh/id_rsa.pub /root/.ssh/known_hosts
+
+ENV GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=yes"
+
 # Install composer and required extensions
 RUN apk add --no-cache \
     composer \
@@ -50,6 +64,9 @@ RUN composer install \
 
 # Update cachethq/core dependency
 RUN composer update cachethq/core --no-interaction --no-dev --prefer-dist
+
+# Remove SSH keys after use for security
+RUN rm -rf /root/.ssh
 
 # ============================================
 # Stage 3: Production PHP runtime
