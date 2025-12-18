@@ -67,7 +67,8 @@ RUN composer update cachethq/core --no-interaction --no-dev --prefer-dist \
     --ignore-platform-req=ext-tokenizer \
     --ignore-platform-req=ext-xml \
     --ignore-platform-req=ext-fileinfo \
-    --ignore-platform-req=ext-dom
+    --ignore-platform-req=ext-dom \
+    --ignore-platform-req=ext-intl
 
 # Remove SSH keys after use for security
 RUN rm -rf /root/.ssh
