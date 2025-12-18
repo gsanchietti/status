@@ -22,6 +22,7 @@ RUN apk add --no-cache \
     g++ \
     make \
     git \
+    openssh \
     && docker-php-ext-install \
         intl \
         dom \
